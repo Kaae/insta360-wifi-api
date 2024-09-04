@@ -38,7 +38,7 @@ Web References:
   https://protobuf.dev/reference/python/
 
 """
-
+import base64
 import logging
 import select
 import signal
@@ -48,27 +48,30 @@ import sys
 import time
 import threading
 
+import cv2
+import numpy as np
+
 from google.protobuf import json_format
 sys.path.append('pb2')
-import capture_state_pb2
-import current_capture_status_pb2
-import error_pb2
-import get_current_capture_status_pb2
-import get_file_list_pb2
-import get_options_pb2
-import get_photography_options_pb2
-import options_pb2
-import photo_pb2
-import set_options_pb2
-import set_photography_options_pb2
-import start_capture_pb2
-import start_live_stream_pb2
-import stop_capture_pb2
-import stop_live_stream_pb2
-import storage_pb2
-import storage_update_pb2
-import take_picture_pb2
-import video_pb2
+import pb2.capture_state_pb2 as capture_state_pb2
+import pb2.current_capture_status_pb2 as current_capture_status_pb2
+import pb2.error_pb2 as error_pb2
+import pb2.get_current_capture_status_pb2 as get_current_capture_status_pb2
+import pb2.get_file_list_pb2 as get_file_list_pb2
+import pb2.get_options_pb2 as get_options_pb2
+import pb2.get_photography_options_pb2 as get_photography_options_pb2
+import pb2.options_pb2 as options_pb2
+import pb2.photo_pb2 as photo_pb2
+import pb2.set_options_pb2 as set_options_pb2
+import pb2.set_photography_options_pb2 as set_photography_options_pb2
+import pb2.start_capture_pb2 as start_capture_pb2
+import pb2.start_live_stream_pb2 as start_live_stream_pb2
+import pb2.stop_capture_pb2 as stop_capture_pb2
+import pb2.stop_live_stream_pb2 as stop_live_stream_pb2
+import pb2.storage_pb2 as storage_pb2
+import pb2.storage_update_pb2 as storage_update_pb2
+import pb2.take_picture_pb2 as take_picture_pb2
+import pb2.video_pb2 as video_pb2
 
 __author__ = "Niccolo Rigacci"
 __copyright__ = "Copyright 2023 Niccolo Rigacci <niccolo@rigacci.org>"
@@ -382,7 +385,20 @@ class camera:
 
         header = pkt_data[:12]
         body = pkt_data[12:]
-        self.logger.info("Received packet: b'%s%s'" % (bytes_to_hex(header), bytes_to_hexascii(body)))
+
+        if len(body) > 1000:
+            # is an image
+            self.logger.info(f'Received image. Size: {len(body)/1000} KB')
+            with open('test.img', 'wb+') as f:
+                f.write(body)
+            # img = base64.b64decode(body)
+            # img = np.frombuffer(img, dtype=np.uint8)
+            # cv2.imshow('image', img)
+            # cv2.waitKey(1)
+        else:
+            self.logger.info(
+                "Received packet: b'Header: %s Body: %s'" % (bytes_to_hex(header), bytes_to_hexascii(body)))
+
         # Responses to messages (header is [:10], protobuf is at [12:])
         # b'\x04\x00\x00\xc8\x00\x02\x1d\x00\x00\x80\x00\x00'  # GetOptionsResp 'LOCAL_TIME', 'TIME_ZONE'
         # b'\x04\x00\x00\xc8\x00\x02\x1e\x00\x00\x80\x3f\x00'  # GetOptionsResp BATTERY_STATUS, STORAGE_STATE, CAMERA_TYPE, FIRMWAREREVISION

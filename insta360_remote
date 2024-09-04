@@ -38,6 +38,8 @@ MAIN_MENU = """
 5) Field of View
 6) Gamma & White
 7) Presets
+8) Start live stream
+9) Stop live stream
 
 Q) Quit
 """
@@ -331,6 +333,10 @@ def main(screen):
                 current_menu = VIDEO_OPT_MENU
             elif key == ord('7'):
                 current_menu = PRESETS_MENU
+            elif key == ord('8'):
+                cam.StartLiveStream()
+            elif key == ord('9'):
+                cam.StopLiveStream()
             elif key == ord('q') or key == ord('Q'):
                 break
             else:
